@@ -6,7 +6,9 @@ import java.util.List;
 import xol.com.Xolod.model.Manufacturer;
 import xol.com.Xolod.model.Refrigerator;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface RefrigeratorRepository extends JpaRepository<Refrigerator, Long> {
     // Поиск по модели
     List<Refrigerator> findByModel(String model);

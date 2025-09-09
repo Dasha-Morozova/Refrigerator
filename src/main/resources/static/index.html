@@ -11,9 +11,11 @@
 
 
 
-<body class="bg-light">
+<body class="" style="background-color: #E5F3FC;">
 
 <div class="container py-4">
+    <h2 class="mb-4">Управление производителями, складами и холодильниками</h2>
+    <hr>
     <!-- Производители -->
     <section class="mb-5">
         <h2 class="mb-4">Производители</h2>
@@ -81,6 +83,66 @@
         </div>
     </section>
 
+    <!-- Склады -->
+    <section class="mb-5">
+        <h2 class="mb-4">Склады</h2>
+
+        <!-- Форма создания -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h4 class="card-title">Создать склад</h4>
+                <form id="create-warehouse-form" class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Адрес</label>
+                        <input required name="address" class="form-control" placeholder="Москва, ул. Ленина, 5">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Создать</button>
+                        <span id="wh-msg" class="text-muted ms-2"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Таблица складов -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Список складов</strong>
+                <button id="reload-warehouses" class="btn btn-outline-secondary btn-sm">Обновить</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-light">
+                    <tr><th>ID</th><th>Адрес</th><th>Действия</th></tr>
+                    </thead>
+                    <tbody id="warehouses-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Форма обновления -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title">Обновить склад</h4>
+                <form id="update-warehouse-form" class="row g-3">
+                    <div class="col-md-2">
+                        <label class="form-label">ID</label>
+                        <input required name="id" type="number" min="1" class="form-control" placeholder="ID">
+                    </div>
+                    <div class="col-md-10">
+                        <label class="form-label">Новый адрес</label>
+                        <input required name="address" class="form-control" placeholder="Новый адрес склада">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-warning">Обновить</button>
+                        <span id="wh-upd-msg" class="text-muted ms-2"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+
     <!-- Холодильники -->
     <section>
         <h2 class="mb-4">Холодильники</h2>
@@ -100,7 +162,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Цена</label>
-                        <input required name="price" type="number" step="0.01" class="form-control" placeholder="49999">
+                        <input required name="price" type="number" step="0.01" class="form-control" placeholder="1000">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Цвет</label>
@@ -114,6 +176,14 @@
                         <label class="form-label">Производитель</label>
                         <select required name="manufacturerId" id="manufacturer-select" class="form-select"></select>
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Количество</label>
+                        <input required name="quantity" type="number" class="form-control">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label">Склад</label>
+                        <select  name="warehouseId" id="warehouse-select" class="form-select"></select>
+                    </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">Создать</button>
                         <span id="rf-msg" class="text-muted ms-2"></span>
@@ -121,6 +191,8 @@
                 </form>
             </div>
         </div>
+
+
 
         <!-- Таблица холодильников -->
         <div class="card shadow-sm mb-4">
@@ -132,7 +204,7 @@
                 <table class="table table-striped table-hover mb-0">
                     <thead class="table-light">
                     <tr>
-                        <th>ID</th><th>Модель</th><th>Тип</th><th>Цена</th><th>Цвет</th><th>Длина</th><th>Производитель</th><th>Действия</th>
+                        <th>ID</th><th>Модель</th><th>Тип</th><th>Цена</th><th>Цвет</th><th>Длина</th><th>Производитель</th><th>Количество</th><th>Склад</th><th>Действия</th>
                     </tr>
                     </thead>
                     <tbody id="refrigerators-tbody"></tbody>
@@ -145,29 +217,33 @@
             <div class="card-body">
                 <h4 class="card-title">Обновить холодильник</h4>
                 <form id="update-refrigerator-form" class="row g-3">
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label">ID</label>
                         <input required name="id" type="number" min="1" class="form-control" placeholder="ID">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label">Модель</label>
                         <input required name="model" class="form-control">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label">Тип</label>
                         <input required name="type" class="form-control">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label">Цена</label>
                         <input required name="price" type="number" step="0.01" class="form-control">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label">Цвет</label>
                         <input required name="color" class="form-control">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label">Длина (см)</label>
                         <input required name="length" type="number" step="0.1" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Количество</label>
+                        <input required name="quantity" type="number" min="0" class="form-control">
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-warning">Обновить</button>

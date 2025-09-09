@@ -1,7 +1,8 @@
     const $ = (sel) => document.querySelector(sel);
     const api = {
       manufacturers: '/manufacturers',
-      refrigerators: '/refrigerators'
+      refrigerators: '/refrigerators',
+      warehouses: '/warehouses'
     };
 
     // ===== Производители =====
@@ -80,35 +81,45 @@
           <td>${r.price}</td>
           <td>${r.color}</td>
           <td>${r.length}</td>
-          <td>${r.manufacturer ? (r.manufacturer.name + ' (' + r.manufacturer.country + ')') : '—'}</td>
-          <td>
-            <button data-del-rf="${r.id}">Удалить</button>
-          </td>
+          <td>${r.manufacturer ? r.manufacturer.name + ' (' + r.manufacturer.country + ')' : '—'}</td>
+          <td>${r.quantity}</td>
+          <td>${r.warehouse ? r.warehouse.address : '—'}</td>
+          <td><button data-del-rf="${r.id}" >Удалить</button></td>
         </tr>
       `).join('');
+
     }
 
-    async function createRefrigerator(e) {
-      e.preventDefault();
-      const f = e.target;
-      const manufacturerId = f.manufacturerId.value;
-      if (!manufacturerId) { alert('Выберите производителя'); return; }
-      const payload = {
-        model: f.model.value.trim(),
-        type: f.type.value.trim(),
-        price: Number(f.price.value),
-        color: f.color.value.trim(),
-        length: Number(f.length.value)
-      };
-      const res = await fetch(`${api.refrigerators}/${manufacturerId}`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-      });
-      $('#rf-msg').textContent = res.ok ? '✓ Создано' : 'Ошибка создания';
-      await loadRefrigerators();
-      f.reset();
-    }
+async function createRefrigerator(e) {
+  e.preventDefault();
+  const f = e.target;
+  const manufacturerId = f.manufacturerId.value;
+  const warehouseId = f.warehouseId.value;
+  if (!manufacturerId || !warehouseId) {
+    alert('Выберите производителя и склад');
+    return;
+  }
+
+  const payload = {
+    model: f.model.value.trim(),
+    type: f.type.value.trim(),
+    price: Number(f.price.value),
+    color: f.color.value.trim(),
+    length: Number(f.length.value),
+    quantity: Number(f.quantity.value)
+  };
+
+  const res = await fetch(`/refrigerators/${manufacturerId}/${warehouseId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  $('#rf-msg').textContent = res.ok ? '✓ Создано' : 'Ошибка создания';
+  await loadRefrigerators();
+  f.reset();
+}
+
 
     async function updateRefrigerator(e) {
       e.preventDefault();
@@ -152,8 +163,105 @@
     $('#reload-manufacturers').addEventListener('click', loadManufacturers);
     $('#reload-refrigerators').addEventListener('click', loadRefrigerators);
 
+
+
+
+
+
+// ===== Склады =====
+async function loadWarehouses() {
+  const res = await fetch(api.warehouses);
+  const data = await res.json();
+
+  // таблица
+  const tbody = $('#warehouses-tbody');
+  tbody.innerHTML = data.map(w => `
+    <tr>
+      <td>${w.id}</td>
+      <td>${w.address}</td>
+      <td>
+        <button data-del-wh="${w.id}" >Удалить</button>
+      </td>
+    </tr>
+  `).join('');
+
+    // селект для создания холодильника
+    const sel = $('#warehouse-select');
+    sel.innerHTML = data.length
+      ? `<option value="" disabled selected>— выберите склад —</option>` +
+        data.map(w => `<option value="${w.id}">${w.address}</option>`).join('')
+      : `<option value="" disabled selected>Сначала создайте склад</option>`;
+}
+
+async function createWarehouse(e) {
+  e.preventDefault();
+  const f = e.target;
+  const payload = { address: f.address.value.trim() };
+
+  const res = await fetch(api.warehouses, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  $('#wh-msg').textContent = res.ok ? '✓ Создано' : 'Ошибка создания';
+  await loadWarehouses();
+  f.reset();
+}
+
+async function updateWarehouse(e) {
+  e.preventDefault();
+  const f = e.target;
+  const id = Number(f.id.value);
+  const payload = { address: f.address.value.trim() };
+
+  const res = await fetch(`${api.warehouses}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  $('#wh-upd-msg').textContent = res.ok ? '✓ Обновлено' : 'Ошибка обновления';
+  await loadWarehouses();
+  f.reset();
+}
+
+async function deleteWarehouse(id) {
+  if (!confirm(`Удалить склад #${id}?`)) return;
+
+  const res = await fetch(`${api.warehouses}/${id}`, { method: 'DELETE' });
+  if (!res.ok) {
+    alert('Не удалось удалить склад (возможно, к нему привязаны холодильники).');
+  }
+  await loadWarehouses();
+}
+
+// ===== Слушатели =====
+document.addEventListener('click', (e) => {
+  const delWh = e.target.closest('[data-del-wh]');
+  if (delWh) deleteWarehouse(delWh.getAttribute('data-del-wh'));
+});
+
+$('#create-warehouse-form').addEventListener('submit', createWarehouse);
+$('#update-warehouse-form').addEventListener('submit', updateWarehouse);
+$('#reload-warehouses').addEventListener('click', loadWarehouses);
+
+//
+async function loadWarehousesForSelect() {
+  const res = await fetch('/warehouses');
+  const data = await res.json();
+  const sel = $('#warehouse-select');
+  sel.innerHTML = data.length
+    ? `<option value="" disabled selected>— выберите склад —</option>` +
+      data.map(w => `<option value="${w.id}">${w.address}</option>`).join('')
+    : `<option value="" disabled selected>Нет складов</option>`;
+}
+
+
     // Первый рендер
     (async function init() {
       await loadManufacturers();
+      await loadRefrigerators();
+      await loadWarehouses();
       await loadRefrigerators();
     })();
